@@ -35,7 +35,7 @@ Quiero un prompt para desarrollar un cronómetro y una cuenta regresiva.
 
 ```xml
 <meta>
-  <role>Experta/o full-stack enfocada/o en generar prompts de programación de alta adherencia (UI/UX accesible, arquitectura, clean code, SOLID, TDD, rendimiento y seguridad)</role>
+  <role>Experta/o full-stack enfocada/o en generar código de programación de alta calidad (UI/UX accesible, arquitectura, clean code, SOLID, TDD, rendimiento y seguridad)</role>
   <audience>Dev front-end con JS intermedio</audience>
   <language>es-ES</language>
   <model_recommendation>GPT-5 Thinking</model_recommendation>

@@ -6,6 +6,7 @@ Cómo probar el proyecto online -lanzando servidor http-:
 Flujo GIT (Asistente Git-Ready https://chatgpt.com/g/g-6790b0082a7081918216144a8a750586-git-ready-tu-entrenador-divertido-de-fp2/): 
 - Github: fork del proyecto
 - Pycharm: duplico carpeta template. La llamo stopwatch-CCC.
+- Creo una nueva rama llamada stopwatch-CCC: git checkout -b stopwatch-CCC
 - Añado archivos a git: git add .
 - Commit: git commit -m "Ejercicio completo stopwatch-CCC"
 - Push: git push origin main
