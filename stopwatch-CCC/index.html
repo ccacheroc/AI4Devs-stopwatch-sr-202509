@@ -22,6 +22,16 @@
       }
       body{ color-scheme: dark; }
     }
+    /* Respeta reduced motion: apaga animaciones/transiciones si el usuario lo pide */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+
     *{ box-sizing:border-box }
     html,body{ height:100% }
     body{
@@ -46,8 +56,16 @@
       height:var(--btn-h); width:100%; border-radius:12px; border:1px solid var(--ring);
       padding:0 12px; background:transparent; color:inherit; outline:0;
     }
+    /* ✅ Indicadores de foco visibles en inputs/select (WCAG 2.2 AA) */
+    .toolbar input[type="text"]:focus,
+    .toolbar select:focus{
+      outline:2px solid var(--primary);
+      outline-offset:2px;
+    }
+
     .duration{ display:flex; gap:8px }
     .duration input{ flex:1; text-align:center }
+
     .btn{
       height:var(--btn-h); padding:0 14px; border-radius:999px; border:1px solid transparent;
       background:var(--primary); color:#fff; font-weight:700; cursor:pointer; user-select:none;
@@ -57,6 +75,15 @@
     .btn.secondary{ background:transparent; color:var(--primary); border-color:var(--primary) }
     .btn.ok{ background:var(--ok) } .btn.warn{ background:var(--warn) } .btn.danger{ background:var(--danger) }
     .btn[disabled]{ opacity:.55; cursor:not-allowed }
+    /* ✅ Indicadores de foco visibles en botones */
+    .btn:focus-visible{
+      outline:3px solid var(--primary);
+      outline-offset:2px;
+    }
+    .btn.secondary:focus-visible{
+      outline-color: var(--primary);
+    }
+
     .grid{ display:grid; gap:16px; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)) }
     .card{
       background:var(--card); border:1px solid var(--ring); border-radius:18px; box-shadow:var(--shadow);
@@ -92,7 +119,8 @@
     <section class="toolbar" aria-label="Crear temporizador">
       <fieldset>
         <label for="label">Etiqueta</label>
-        <input id="label" name="label" type="text" inputmode="latin" maxlength="40" placeholder="Opcional (p.ej. 'Pausa café')" />
+        <!-- ✅ inputmode válido -->
+        <input id="label" name="label" type="text" inputmode="text" maxlength="40" placeholder="Opcional (p.ej. 'Pausa café')" />
       </fieldset>
 
       <fieldset>
@@ -142,4 +170,5 @@
   <script src="script.js"></script>
 </body>
 </html>
+
 

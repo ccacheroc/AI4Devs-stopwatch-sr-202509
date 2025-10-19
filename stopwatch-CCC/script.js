@@ -4,14 +4,25 @@ const listEl = document.getElementById('list');
 const fallbackBanner = document.getElementById('fallback-banner');
 const liveAssertive = document.getElementById('live-assertive');
 
-// Modo claro/oscuro (informativo)
+/* ---------- Comprobaciones de plataforma (tempranas) ---------- */
+if (!('performance' in window && 'now' in performance)) {
+  alert('Este navegador no soporta performance.now(). La aplicación podría no funcionar correctamente.');
+}
+if (!('requestAnimationFrame' in window)) {
+  alert('Este navegador no soporta requestAnimationFrame(). La aplicación podría no funcionar correctamente.');
+}
+if (!('AudioContext' in window || 'webkitAudioContext' in window)) {
+  console.warn('Web Audio no disponible: el sonido puede no reproducirse.');
+}
+
+/* Modo claro/oscuro (informativo) */
 const prefersDark = matchMedia('(prefers-color-scheme: dark)');
 document.getElementById('mode-label').textContent = prefersDark.matches ? 'oscuro' : 'claro';
 prefersDark.addEventListener('change', e => {
   document.getElementById('mode-label').textContent = e.matches ? 'oscuro' : 'claro';
 });
 
-// ---------- Utils ----------
+/* ---------- Utils ---------- */
 const clamp = (n, min, max) => Math.min(max, Math.max(min, n));
 const toSec = ({ hh = 0, mm = 0, ss = 0 }) =>
   (Number(hh) || 0) * 3600 + (Number(mm) || 0) * 60 + (Number(ss) || 0);
@@ -24,11 +35,11 @@ const fmt = (s) => {
 };
 const safeText = (el, txt) => { el.textContent = txt ?? ''; };
 
-// ---------- Entorno/Permisos ----------
+/* ---------- Entorno/Permisos ---------- */
 const IS_SECURE = (location.protocol === 'https:' || location.hostname === 'localhost');
 const NOTIFY_SUPPORTED = ('Notification' in window) && IS_SECURE;
 
-// ---------- Audio ----------
+/* ---------- Audio ---------- */
 let audioCtx = null;
 function ensureAudioUnlocked() {
   if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -47,7 +58,7 @@ function beep({ freq = 880, duration = 0.35, gain = 0.05 } = {}) {
   osc.start(); osc.stop(audioCtx.currentTime + duration + 0.02);
 }
 
-// ---------- Notificaciones ----------
+/* ---------- Notificaciones ---------- */
 function ensureNotifyPermission() {
   // En file:// no hay contexto seguro → usamos fallback sin pedir permiso
   if (!NOTIFY_SUPPORTED) {
@@ -72,7 +83,7 @@ function notifyDone(title, body) {
   }
 }
 
-// ---------- Motor ----------
+/* ---------- Motor ---------- */
 let nextId = 1;
 class Timer {
   constructor({ type = 'countdown', label = '', durationSec = 0 }) {
@@ -130,7 +141,8 @@ class Timer {
   }
   isDone(now) {
     if (this.type !== 'countdown' || this.state !== 'running') return false;
-    return (this.endAt - (now ?? performance.now()) - this.pausedAccum) <= 0;
+    // ✅ Corrige el bug: debe SUMAR pausedAccum como en nowSeconds
+    return (this.endAt - (now ?? performance.now()) + this.pausedAccum) <= 0;
   }
 }
 
@@ -153,7 +165,7 @@ function removeTimer(id) {
   store.delete(id);
 }
 
-// ---------- UI: tarjeta ----------
+/* ---------- UI: tarjeta ---------- */
 function renderCard(t) {
   const card = document.createElement('li'); card.className = 'card'; card.setAttribute('role', 'article');
   const header = document.createElement('div'); header.className = 'row';
@@ -169,6 +181,8 @@ function renderCard(t) {
   const resumeBtn = btn('Reanudar', 'ok'); resumeBtn.disabled = true;
   const resetBtn = btn('Restablecer', 'secondary'); resetBtn.disabled = false;
   const muteBtn = btn('Silenciar', 'secondary');
+  muteBtn.setAttribute('aria-pressed', 'false');   // ✅ estado accesible inicial
+  muteBtn.setAttribute('role', 'button');          // (redundante en <button>, pero inofensivo)
   const delBtn = btn('Eliminar', 'danger');
 
   controls.append(startBtn, pauseBtn, resumeBtn, resetBtn, muteBtn, delBtn);
@@ -191,15 +205,23 @@ function renderCard(t) {
   resumeBtn.addEventListener('click', () => { t.resume(); pauseBtn.disabled = false; resumeBtn.disabled = true; });
   resetBtn.addEventListener('click', () => { t.reset(); startBtn.disabled = false; pauseBtn.disabled = true; resumeBtn.disabled = true; safeText(time, fmt(t.nowSeconds())); });
   delBtn.addEventListener('click', () => { removeTimer(t.id); });
-  muteBtn.addEventListener('click', () => { t.toggleMute(); muteBtn.textContent = t.muted ? 'Sonar' : 'Silenciar'; });
+  muteBtn.addEventListener('click', () => {
+    t.toggleMute();
+    muteBtn.textContent = t.muted ? 'Sonar' : 'Silenciar';
+    muteBtn.setAttribute('aria-pressed', t.muted.toString()); // ✅ estado accesible actualizado
+  });
 
   return { card, time, startBtn, pauseBtn, resumeBtn };
 }
 function btn(label, kind = '') {
-  const b = document.createElement('button'); b.className = 'btn' + (kind ? ` ${kind}` : ''); b.type = 'button'; b.textContent = label; return b;
+  const b = document.createElement('button');
+  b.className = 'btn' + (kind ? ` ${kind}` : '');
+  b.type = 'button';
+  b.textContent = label;
+  return b;
 }
 
-// ---------- Bucle de render ----------
+/* ---------- Bucle de render ---------- */
 function loop() {
   const now = performance.now();
   for (const { timer, dom } of store.values()) {
@@ -216,7 +238,7 @@ function loop() {
 }
 requestAnimationFrame(loop);
 
-// ---------- Controles superiores ----------
+/* ---------- Controles superiores ---------- */
 document.getElementById('request-perms').addEventListener('click', async () => {
   await ensureAudioUnlocked();
   await ensureNotifyPermission(); // en file:// mostrará banner y usará fallback
@@ -241,16 +263,11 @@ document.getElementById('create').addEventListener('click', () => {
   }
 });
 
-// ---------- Ayuda / atajos ----------
+/* ---------- Ayuda / atajos ---------- */
 window.addEventListener('keydown', (e) => {
   if (e.key === '?') {
     e.preventDefault();
     alert('Atajos:\n- Tab para navegar, Enter/Espacio para activar.\n- “Permisos” desbloquea audio.\n- Hasta 50 temporizadores visibles.\n- En file:// las notificaciones nativas no están disponibles: se usa un aviso accesible.');
   }
 });
-
-// ---------- Comprobaciones de plataforma ----------
-if (!('performance' in window && 'now' in performance)) alert('Este navegador no soporta performance.now().');
-if (!('requestAnimationFrame' in window)) alert('Este navegador no soporta requestAnimationFrame().');
-if (!('AudioContext' in window || 'webkitAudioContext' in window)) console.warn('Web Audio no disponible: el sonido puede no reproducirse.');
 
