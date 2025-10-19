@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Temporizadores</title>
+  <meta name="color-scheme" content="light dark" />
+  <!-- Favicon inline para evitar 404 incluso en file:// -->
+  <link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><circle cx="32" cy="32" r="30" fill="%232563eb"/><path d="M18 34h28v6H18zM30 14h4v24h-4z" fill="white"/></svg>'>
+  <style>
+    :root{
+      --bg:#f6f7ff; --fg:#0b0c0e; --muted:#6b7280; --ring:#c7d2fe; --subtle:#edf2ff;
+      --card:#eef2ff; --shadow:0 6px 22px rgba(0,0,0,.08);
+      --primary:#2563eb; --primary-2:#1e40af; --ok:#16a34a; --warn:#b45309; --danger:#dc2626;
+      --btn-h:44px; --gap:12px; --radius:16px;
+    }
+    @media (prefers-color-scheme: dark){
+      :root{
+        --bg:#0b1020; --fg:#e5e7eb; --muted:#9aa5b1; --ring:#334155; --subtle:#0e162e;
+        --card:#0f172a; --shadow:0 8px 28px rgba(0,0,0,.35);
+        --primary:#60a5fa; --primary-2:#3b82f6; --ok:#22c55e; --warn:#f59e0b; --danger:#f87171;
+      }
+      body{ color-scheme: dark; }
+    }
+    *{ box-sizing:border-box }
+    html,body{ height:100% }
+    body{
+      margin:0; background:var(--bg); color:var(--fg);
+      font:16px/1.4 system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;
+    }
+    header,footer{ padding:16px }
+    header{
+      max-width:1100px; margin:0 auto; display:flex; align-items:center; gap:12px; justify-content:space-between;
+    }
+    header h1{ margin:0; font-weight:800; font-size:clamp(18px,3.2vw,24px) }
+    main{ max-width:1100px; margin:0 auto; padding:0 16px 60px }
+    .toolbar{
+      background:var(--card); border:1px solid var(--ring); border-radius:var(--radius);
+      padding:16px; box-shadow:var(--shadow); display:grid; gap:var(--gap);
+      grid-template-columns:1.2fr .9fr 1.1fr auto; align-items:end; margin-bottom:16px;
+    }
+    @media (max-width:720px){ .toolbar{ grid-template-columns:1fr 1fr } }
+    .toolbar fieldset{ border:0; margin:0; padding:0; min-inline-size:0 }
+    .toolbar label{ display:block; font-size:12px; color:var(--muted); margin-bottom:6px }
+    .toolbar input[type="text"], .toolbar select{
+      height:var(--btn-h); width:100%; border-radius:12px; border:1px solid var(--ring);
+      padding:0 12px; background:transparent; color:inherit; outline:0;
+    }
+    .duration{ display:flex; gap:8px }
+    .duration input{ flex:1; text-align:center }
+    .btn{
+      height:var(--btn-h); padding:0 14px; border-radius:999px; border:1px solid transparent;
+      background:var(--primary); color:#fff; font-weight:700; cursor:pointer; user-select:none;
+      display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    }
+    .btn:hover{ background:var(--primary-2) }
+    .btn.secondary{ background:transparent; color:var(--primary); border-color:var(--primary) }
+    .btn.ok{ background:var(--ok) } .btn.warn{ background:var(--warn) } .btn.danger{ background:var(--danger) }
+    .btn[disabled]{ opacity:.55; cursor:not-allowed }
+    .grid{ display:grid; gap:16px; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)) }
+    .card{
+      background:var(--card); border:1px solid var(--ring); border-radius:18px; box-shadow:var(--shadow);
+      padding:14px; display:flex; flex-direction:column; gap:10px; min-height:186px;
+    }
+    .row{ display:flex; align-items:center; justify-content:space-between; gap:10px }
+    .label{ font-weight:700; inline-size:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+    .time{
+      font-variant-numeric: tabular-nums; letter-spacing:.5px;
+      font-size:clamp(22px,4.5vw,36px); font-weight:800;
+      padding:6px 10px; border-radius:12px; background:rgba(255,255,255,.12);
+    }
+    .controls{ display:flex; flex-wrap:wrap; gap:8px }
+    .controls .btn{ flex:1 1 auto; min-width:calc(50% - 8px) }
+    .meta{ font-size:12px; color:var(--muted); display:flex; gap:10px; align-items:center }
+    .pill{ padding:3px 8px; border-radius:999px; border:1px solid var(--ring) }
+    .kbd{ font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12px; padding:2px 6px; border-radius:6px; background:var(--subtle) }
+    .sr-only{ position:absolute!important; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); border:0 }
+    .banner{ margin:12px 0; padding:10px 12px; border-radius:12px; border:1px dashed var(--warn); color:var(--warn); background:rgba(245,158,11,.12) }
+  </style>
+</head>
+<body>
+  <a class="sr-only" href="#main">Saltar al contenido</a>
+  <header role="banner">
+    <h1>Temporizadores</h1>
+    <div class="meta" aria-live="polite">
+      <span class="pill">Modo: <span id="mode-label">auto</span></span>
+      <span class="pill">Atajos: <span class="kbd">?</span></span>
+    </div>
+  </header>
+
+  <main id="main" role="main">
+    <section class="toolbar" aria-label="Crear temporizador">
+      <fieldset>
+        <label for="label">Etiqueta</label>
+        <input id="label" name="label" type="text" inputmode="latin" maxlength="40" placeholder="Opcional (p.ej. 'Pausa café')" />
+      </fieldset>
+
+      <fieldset>
+        <label for="type">Tipo</label>
+        <select id="type" name="type">
+          <option value="countdown">Cuenta regresiva</option>
+          <option value="stopwatch">Cronómetro</option>
+        </select>
+      </fieldset>
+
+      <fieldset class="duration" aria-describedby="dur-help">
+        <label for="hh" class="sr-only">Horas</label>
+        <input id="hh" type="text" pattern="\d{1,2}" placeholder="hh" aria-label="Horas" />
+        <label for="mm" class="sr-only">Minutos</label>
+        <input id="mm" type="text" pattern="\d{1,2}" placeholder="mm" aria-label="Minutos" />
+        <label for="ss" class="sr-only">Segundos</label>
+        <input id="ss" type="text" pattern="\d{1,2}" placeholder="ss" aria-label="Segundos" />
+        <div id="dur-help" class="sr-only">Introduce duración en horas, minutos y segundos. Obligatorio para cuenta regresiva.</div>
+      </fieldset>
+
+      <div style="display:flex; gap:8px; justify-content:flex-end">
+        <button id="request-perms" class="btn secondary" type="button" title="Desbloquear audio y (si es posible) notificaciones">Permisos</button>
+        <button id="create" class="btn" type="button">Añadir</button>
+      </div>
+    </section>
+
+    <div id="fallback-banner" class="banner" hidden aria-live="polite">
+      Las notificaciones nativas no están disponibles en este contexto. Usaremos avisos en pantalla y sonido (si el audio está desbloqueado).
+    </div>
+
+    <section aria-label="Lista de temporizadores">
+      <ol id="list" class="grid" aria-live="off"></ol>
+    </section>
+
+    <section aria-live="assertive" class="sr-only" id="live-assertive"></section>
+  </main>
+
+  <footer role="contentinfo">
+    <div class="meta">
+      <span class="pill">Teclado: <span class="kbd">Tab</span> navegar, <span class="kbd">Enter/Espacio</span> activar.</span>
+      <span class="pill">hasta 50 temporizadores visibles</span>
+      <span class="pill">Respeta <abbr title="Reduce motion">reduced motion</abbr></span>
+    </div>
+  </footer>
+
+  <!-- IMPORTANTE: sin type="module" para máxima compatibilidad en file:// -->
+  <script src="script.js"></script>
+</body>
+</html>
+
