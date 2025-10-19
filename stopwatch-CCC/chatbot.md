@@ -2,7 +2,7 @@
 
 > Archivo: `informe-flujo-chatgpt-cronometros.md`  
 > Contexto breve: Usé **ChatGPT (GPT-5 Thinking)** con un **metaprompter** para generar el código de una app web con cronómetro y cuenta regresiva múltiples. No domino muchos detalles del código, así que me centré en **UX y accesibilidad** y en asegurar la **funcionalidad requerida**. El prompt funcionó a la **primera**, pero eché en falta más control paso a paso.
-
+> Metarpompter: https://chatgpt.com/g/g-68f4b8b840588191bfe3432d1422c042-lidr-generadorpromptsprogramacion/
 ---
 
 ## 1) ¿**Qué chatbot(s)** usaste?
